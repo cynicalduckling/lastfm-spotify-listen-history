@@ -199,16 +199,37 @@ df = pd.merge(
     right=lastfm_df, left=spotify_df, on=["entry_id", "name", "artist"], validate="1:1"
 )
 
-df = df[
-    ["entry_id"] + sorted([x for x in df.columns.tolist() if x not in ["entry_id"]])
-]
-
-
 df = pd.merge(
     right=lastfm_df, left=spotify_df, on=["entry_id", "name", "artist"], validate="1:1"
 )
 
-if df.columns.tolist() == saved_df.columns.tolist():
+column_order = [
+    "entry_id",
+    "name",
+    "album",
+    "artist",
+    "album_release_date",
+    "url",
+    "album_image_spotify",
+    "image",
+    "now_playing",
+    "processed_flag",
+    "search_string",
+    "song_artists_all",
+    "spotify_album_url",
+    "spotify_song_id",
+    "spotify_song_url",
+    "spotify_track_info",
+    "track_duration",
+    "track_popularity",
+    "played_on",
+    "etl_datetime",
+]
+
+df = df[column_order]
+saved_df = saved_df[column_order]
+
+if sorted(df.columns) == sorted(saved_df.columns):
     print(f"{now()} ---> {len(df)} records appended")
     df = pd.concat([df, saved_df]).sort_values(by="played_on", ascending=False)
     df = df.drop_duplicates(subset=["played_on"])
@@ -216,6 +237,7 @@ if df.columns.tolist() == saved_df.columns.tolist():
 
     df.to_pickle("history")
     df.to_excel("history.xlsx", index=False, engine="xlsxwriter", sheet_name="Tracker")
+
 
 end = time.perf_counter()
 
