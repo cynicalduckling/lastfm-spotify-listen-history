@@ -5,6 +5,9 @@ import numpy as np
 from dotenv import load_dotenv
 from datetime import datetime
 from hashlib import md5
+from tqdm import tqdm
+
+tqdm.pandas()
 
 load_dotenv()
 
@@ -141,7 +144,7 @@ spotify_df["search_string"] = (
 )
 
 
-spotify_df["spotify_track_info"] = spotify_df.search_string.apply(
+spotify_df["spotify_track_info"] = spotify_df.search_string.progress_apply(
     lambda x: spotify_search(query=x)
 )
 
@@ -199,9 +202,6 @@ df = pd.merge(
     right=lastfm_df, left=spotify_df, on=["entry_id", "name", "artist"], validate="1:1"
 )
 
-df = pd.merge(
-    right=lastfm_df, left=spotify_df, on=["entry_id", "name", "artist"], validate="1:1"
-)
 
 column_order = [
     "entry_id",
