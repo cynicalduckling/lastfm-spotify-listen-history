@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
 from datetime import datetime
-from hashlib import md5
 from tqdm import tqdm
 
 tqdm.pandas()
@@ -59,7 +58,7 @@ while True:
         "api_key": os.getenv("LASTFM_API_KEY"),
         "method": "user.getRecentTracks",
         "format": "json",
-        "user": "cynicalszn",
+        "user": os.getenv("LASTFMUSER"),
         "page": int(response["recenttracks"]["@attr"]["page"]) + 1
         if response and len(response["recenttracks"]["@attr"].keys()) > 0
         else 1,
@@ -77,8 +76,6 @@ while True:
         == response["recenttracks"]["@attr"]["totalPages"]
     ):
         break
-
-    time.sleep(0.5)
 
 
 lastfm_df = pd.DataFrame.from_records(tracks)
@@ -199,9 +196,11 @@ spotify_df["track_popularity"] = spotify_df.spotify_track_info.apply(
 spotify_df["processed_flag"] = True
 
 df = pd.merge(
-    right=lastfm_df, left=spotify_df, on=["entry_id", "name", "artist"], validate="1:1"
+    right=lastfm_df,
+    left=spotify_df.drop(columns=["name", "artist"]),
+    on="entry_id",
+    validate="1:1",
 )
-
 
 column_order = [
     "entry_id",
@@ -231,11 +230,12 @@ saved_df = saved_df[column_order]
 
 if sorted(df.columns) == sorted(saved_df.columns):
     print(f"{now()} ---> {len(df)} records appended")
-    df = pd.concat([df, saved_df]).sort_values(by="played_on", ascending=False)
-    df = df.drop_duplicates(subset=["played_on"])
-    df.entry_id = range(1, len(df) + 1)
-
-    df.to_pickle("history")
+    df = (
+        pd.concat([df, saved_df])
+        .sort_values(by="played_on", ascending=False)
+        .drop_duplicates(subset=["played_on", "spotify_song_id"])
+    )
+    df.entry_id = list(range(1, len(df) + 1))[::-1]
     df.to_excel("history.xlsx", index=False, engine="xlsxwriter", sheet_name="Tracker")
 
 

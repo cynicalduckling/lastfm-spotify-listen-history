@@ -1,3 +1,5 @@
-# lastfm-spotify-listen-history
+# LastFM Spotify Listening History backup
 
-script to pull your spotify listens from last.fm website, get it into a pandas dataframe and get additional info about the tracks by making use of the spotify api.
+## Link your spotify account to LastFM. It will start recording all your listening activity
+
+This script then downloads and updates this data to an excel file by appending data everytime it's run
